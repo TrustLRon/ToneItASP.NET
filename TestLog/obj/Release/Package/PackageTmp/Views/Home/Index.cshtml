@@ -1,0 +1,52 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+@using Microsoft.AspNet.Identity;
+
+
+<div class="jumbotron">
+    <h1>Welcome to ToneIt.</h1>
+    <h2>Because Screw Poe.</h2>
+
+    @if (Request.IsAuthenticated)
+    {
+        <br /><p class="lead">Click the button below to start chatting.</p><p></p>
+        <p><a href="~/Home/ChatHub" class="btn btn-success btn-lg">Get Toned &raquo;</a></p>
+    }
+    else
+    {
+        <br /><p class="lead">Sign in to get toned, with friends.</p><p></p>
+        <p><a href="~/Account/Login" class="btn btn-primary btn-lg">Sign in &raquo;</a> OR <a href="~/Account/Register" class="btn btn-info btn-lg">Register &raquo;</a></p>
+
+    }
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <h2>Poe's Law</h2>
+        <p>
+            Poe's Law states that without a clear indicator of an author's intention, it is often impossible to tell the
+            difference between an expression of sincere extremism and a parody of such extremism.
+        </p>
+        <p>It is the intention of this chat application to remove this problem by adding tone to messages.</p>
+        <p><a class="btn btn-default" href="http://en.wikipedia.org/wiki/Poe%27s_law">Learn more &raquo;</a></p>
+    </div>
+    <div class="col-md-4">
+        <h2>Getting Toned</h2>
+        <p>
+            If you aren't already a member, register by clicking the 'Register' button above, or in the top right.
+        </p>
+        <p>
+            If you have already signed up, sign in, and get toned.
+        </p>
+    </div>
+
+    <div class="col-md-4">
+        <h2>Tone</h2>
+        <p>Currently, tone is added to the conversation by the way of different background colours that can be 
+        chosen by the user.  Users can click on the colours to see what tone was used for the message.</p>
+        <p>If you have a better idea for how this can be achieved, feedback can be left by following the link
+        in the button below.</p>
+        <p><a class="btn btn-default" href="https://www.youtube.com/watch?v=65I0HNvTDH4">Learn more &raquo;</a></p>
+    </div>
+</div>

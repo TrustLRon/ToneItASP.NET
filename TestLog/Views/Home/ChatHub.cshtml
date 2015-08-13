@@ -1,0 +1,377 @@
+﻿@{
+    ViewBag.Title = "Chat";
+}
+@using Microsoft.AspNet.Identity;
+@using System.Collections.Generic;
+@model IEnumerable<TestLog.ChatHub>
+
+    <style>
+        .box_shadow {
+            background: #f3f4f6;
+            border: 1px solid #e4e4e4;
+            -moz-box-shadow: 0px 0px 2px 1px #e5e5e5;
+            -webkit-box-shadow: 0px 0px 2px 1px #e5e5e5;
+            box-shadow: 0px 0px 2px 1px #e5e5e5;
+        }
+
+        #message_container {
+            margin: 0 auto;
+            background: #fff;
+            padding: 15px 0 0 0;
+            width: 80%;
+
+        }
+
+        #discussion {
+            margin: 10px;
+            padding: 0;
+            height: 300px;
+            overflow: scroll;
+            overflow-x: hidden;
+            width: auto;
+        }
+
+        #discussion li {
+            list-style: none;
+            font-family: 'Open Sans', sans-serif;
+            font-size: 16px;
+            padding: 10px 10px;
+            color: #000000;
+            margin-bottom: 3px;
+            margin-right: 20px;
+            width: auto;
+            word-wrap: hyphenate;
+            overflow-wrap: break-word;
+        }
+        
+        #input_message_container {
+            margin: 10px auto;
+            width: 80%;
+        }
+
+        #message {
+            background: #f0f0f0;
+            border: none;
+            font-size: 20px;
+            font-family: 'Open Sans', sans-serif;
+            outline: none;
+            padding: 10px 10px;
+            width:100%;
+            max-width:none;
+            margin:5px;
+        }
+
+        #sendmessage {
+            border: none;
+            font-family: 'Open Sans', sans-serif;
+            outline: none;
+            padding: 10px 10px;
+            font-size: 20px;
+            cursor: pointer;
+            float:right;
+            margin:5px;
+        }
+
+        #tone {
+            border: none;
+            outline: none;
+            margin: 5px;
+            padding: 10px 10px;
+            font-size: 20px;
+        }
+        
+        #usersbutton {
+            border: none;
+            outline: none;
+            margin: 5px;
+            padding: 10px 10px;
+            font-size: 20px;
+        }
+                
+        #tones {
+            float:right;
+        }
+
+        #users {
+            float:right;
+        }
+
+        #sendbutton {
+            float:right;
+        }
+
+        #messagesendmessage {
+            width:65%;
+        }
+
+        #messagesendmessage, #thebuttons {
+            display:inline-block;
+        }
+
+        #tones, #users, #sendbutton {
+            display:inline-block;
+            float:right;
+        }
+
+        #thebuttons {
+            float:right;
+        }
+
+    </style>
+
+
+    <div class="jumbotron">
+        <h1>Time to Chat.</h1>
+        <div class="alert alert-success">
+            Hello @User.Identity.Name! Start Chatting...
+        </div>
+    </div>
+
+    <div id="message_container" class="box_shadow">
+        <ul id="discussion"></ul>
+
+        <!-- Modal -->
+        <div class="modal fade" id="myModal" role="dialog">
+            <div class="modal-dialog modal-sm">
+
+                <!-- Modal content-->
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title" id="modalTitle">Tone</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p style="text-align:center" id="modalToneText">Text.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">OK</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="input_message_container">
+        <input type="hidden" id="displayname" />
+        <div class="col" id="messagesendmessage">
+            <input type="text" id="message" placeholder="Type your message here..." />
+        </div>
+        <div class="col" id="thebuttons">
+            <div class="dropup" id="tones">
+                <button class="dropup btn btn-danger dropdown-menu-right" type="button" id="tone" data-toggle="dropdown" style="float:right">
+                    ToneIt.
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-right" role="menu" aria-labelledby="menu1" id="tonesdu">
+                    <li><a href="#">Happy</a></li>
+                    <li><a href="#">Angry</a></li>
+                    <li><a href="#">Sarcastic</a></li>
+                    <li><a href="#">Sad</a></li>
+                    <li><a href="#">Excited</a></li>
+                    <li><a href="#">Confused</a></li>
+                    <li><a href="#">Jealous</a></li>
+                    <li><a href="#">Surprised</a></li>
+                    <li class="divider"></li>
+                    <li><a href="#">None</a></li>
+                </ul>
+            </div>
+            <div class="dropup" id="users">
+                <button class="dropup btn btn-info dropdown-menu-right" type="button" id="usersbutton" data-toggle="dropdown" style="float:right">
+                    Users
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-right" role="menu" aria-labelledby="menu2" id="usersdu"></ul>
+            </div>
+            <div id="sendbutton">
+                <button class="btn btn-success" type="button" id="sendmessage">Send</button>
+            </div>
+        </div>
+    </div>
+
+
+@section scripts {
+    <!--Script references. -->
+
+    <!--The jQuery library is required and is referenced by default in _Layout.cshtml. -->
+    <!--Reference the SignalR library. -->
+    <script src="~/Scripts/jquery.signalR-2.2.0.min.js"></script>
+    <!--Reference the autogenerated SignalR hub script. -->
+    <script src="~/signalr/hubs"></script>
+    <!--SignalR script to update the chat page and send messages.-->
+    <script>
+
+    $(function () {
+        // Reference the auto-generated proxy for the hub.
+        var chat = $.connection.chatHub;
+        var privateChat = false;
+        var privateUserName;
+        var privateText;
+        var tone;
+        var backgroundColor;
+        var nameColor;
+        var messageColor;
+
+        // Create a function that the hub can call back to display messages.
+        chat.client.addNewMessageToPage = function (name, message, tone, privateTag) {
+             //Add the message to the page.
+            if (tone == "Happy") {
+                backgroundColor = "#ffd800";
+                nameColor = "#fff";
+                messageColor = "#fff";
+            } else if (tone == "Angry") {
+                backgroundColor = "#ff5555";
+                nameColor = "#fff";
+                messageColor = "#fff";
+            } else if (tone == "Sarcastic") {
+                backgroundColor = "#5a401f";
+                nameColor = "#fff";
+                messageColor = "#fff";
+            } else if (tone == "Sad") {
+                backgroundColor = "#2962ff";
+                nameColor = "#fff";
+                messageColor = "#fff";
+            } else if (tone == "Excited") {
+                backgroundColor = "#f961ff";
+                nameColor = "#fff";
+                messageColor = "#fff";
+            } else if (tone == "Confused") {
+                backgroundColor = "#808080";
+                nameColor = "#fff";
+                messageColor = "#fff";
+            } else if (tone == "Jealous") {
+                backgroundColor = "#52c14a";
+                nameColor = "#fff";
+                messageColor = "#fff";
+            } else if (tone == "Surprised") {
+                backgroundColor = "#e09d25";
+                nameColor = "#fff";
+                messageColor = "#fff";
+            } else if (tone == "None") {
+                tone = "Normal";
+                backgroundColor = "#fff";
+                nameColor = "#54bae1";
+                messageColor = "#000000";
+            } else {
+                tone = "Normal";
+                backgroundColor = "#fff";
+                nameColor = "#54bae1";
+                messageColor = "#000000";
+            };
+            
+            $('#discussion').append('<li title="' + tone + '"'
+                + 'style="border-radius:20px; background-color:' + htmlEncode(backgroundColor) + '">'
+                + '<strong style="color:' + htmlEncode(nameColor) + '">' + htmlEncode(name)
+                + ' <span style="background-color:#ff0000; color:#fff; font-size:10px">' + privateTag + '</span>' + ' : </strong>'
+                + '<span style="color:' + htmlEncode(messageColor) + '">' + htmlEncode(message) + '</span>'
+                + '<p style="font-size:10px; text-align:right;">' + new Date(Date.now()).toLocaleString() + '</p></li>');
+            $('#discussion').stop().animate({ scrollTop: $('#discussion')[0].scrollHeight }, 800);
+            $("#tone").html('ToneIt. <span class="caret"></span>');
+            tone = null;
+        };
+
+        chat.client.joined = function (name, message) {
+            // Add the connection message to the page.
+            $('#discussion').append('<li><strong style="color:#8aaf0d">' + htmlEncode(name)
+                + '</strong> ' + htmlEncode(message) + '</li>');
+            $('#discussion').stop().animate({ scrollTop: $('#discussion')[0].scrollHeight }, 800);
+        };
+
+        chat.client.leaving = function (name, message) {
+            // Add the left message to the page.
+            $('#discussion').append('<li><strong style="color:#d33c3c">' + htmlEncode(name)
+                + '</strong> ' + htmlEncode(message) + '</li>');
+            $('#discussion').stop().animate({ scrollTop: $('#discussion')[0].scrollHeight }, 800);            
+        };
+
+        chat.client.updateOnline = function (UsersOnline) {
+            $('#usersdu').empty();
+            $('#usersdu').append('<li><a href="#">All<a/></li>');
+            $.each(UsersOnline, function (index, name) {
+                $('#usersdu').append('<li class="divider"></li><li><a href="#">' + name + '</a></li>');
+            });
+        };
+
+        function keypressHandler(e) {
+            if (e.which == 13) {
+                e.preventDefault(); //stops default action: submitting form
+                $(this).blur();
+                $('#sendmessage').focus().click();//give your submit an ID
+            }
+        };
+
+        $('#message').keypress(keypressHandler);
+
+        $("#tonesdu").on('click', 'li', function () {
+            tone = ($(this).text());
+            $("#tone").html(tone);
+            $('#message').focus();
+        });
+
+        $("#usersdu").on('click', 'li', function () {
+            privateUserName = ($(this).text());
+            if (privateUserName == '@User.Identity.GetUserName()') {
+                privateUserName = null;
+                $("#modalTitle").html("That's just sad :'(");
+                $("#modalToneText").html("Maybe try talking to someone other than yourself... weirdo.");
+                $("#myModal").modal('show');
+                $('#message').focus();
+            } else {
+                $("#usersbutton").html(privateUserName);
+                $('#message').focus();
+            };
+        });
+
+        $("#discussion").on('click', 'li', function () {
+            if ($(this).attr("title") != null) {
+                if ($(this).css("background-color") != "rgb(255, 255, 255)") {
+                    var modalTone = $(this).attr("title");
+                    $("#modalTitle").html("Tone.");
+                    $("#modalToneText").html(modalTone);
+                    $("#myModal").modal('show');
+                }
+            };
+        });
+
+
+        //// Get the user name and store it to prepend to messages.
+        $('#displayname').val('@User.Identity.GetUserName()');
+            // Set initial focus to message input box.
+            $('#message').focus();
+
+            // Start the connection.
+            $.connection.hub.start().done(function () {
+                //chat.server.join($('#displayname').val(), ' has connected');
+
+                $('#sendmessage').click(function () {
+                    // Call the Send method on the hub.
+                    var message = $('#message').val();
+
+                    if (privateUserName == null || privateUserName == "All") {
+
+                        if (message.trim().length > 0) {
+                            chat.server.send($('#displayname').val(), message, tone);
+                            // Clear text box and reset focus for next comment.
+                            $('#message').val('').focus();
+                            tone = null;
+                        } else {
+                            $("#modalTitle").html("The silent type?");
+                            $("#modalToneText").html("Use your words...");
+                            $("#myModal").modal('show');
+                            $('#message').val('').focus();
+                        }
+                    } else {
+                        chat.server.sendPrivate($('#displayname').val(), message, privateUserName, tone);
+                        $('#message').val('').focus();
+                        tone = null;
+                    };
+                });
+            });
+    });
+
+        // This optional function html-encodes messages for display in the page.
+        function htmlEncode(value) {
+            var encodedValue = $('<div />').text(value).html();
+            return encodedValue;
+        }
+    </script>
+}
